@@ -16,7 +16,6 @@ public class DataLoader implements CommandLineRunner {
     @Override
     public void run(String... args) {
 
-        // Prevent duplicate inserts
         if (repository.count() > 0) {
             return;
         }
@@ -34,6 +33,6 @@ public class DataLoader implements CommandLineRunner {
 
         repository.saveAll(defaultWords);
 
-        System.out.println("✔ Default sensitive words loaded into database.");
+        System.out.println("Default sensitive words loaded into database.");
     }
 }

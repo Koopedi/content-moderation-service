@@ -9,8 +9,6 @@ import java.util.Optional;
 @Repository
 public interface SensitiveWordRepository extends JpaRepository<SensitiveWord, Long> {
 
-    Optional<SensitiveWord> findByWord(String word);
-
     boolean existsByWord(String word);
 
 }
