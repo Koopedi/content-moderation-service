@@ -1,5 +1,4 @@
 package co.za.flash.content_moderation_service.service.impl;
-
 import co.za.flash.content_moderation_service.dto.CreateWordRequest;
 import co.za.flash.content_moderation_service.dto.UpdateWordRequest;
 import co.za.flash.content_moderation_service.dto.WordResponse;
@@ -9,8 +8,6 @@ import co.za.flash.content_moderation_service.exception.ResourceNotFoundExceptio
 import co.za.flash.content_moderation_service.repository.SensitiveWordRepository;
 import co.za.flash.content_moderation_service.service.SensitiveWordService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,12 +18,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional
 public class SensitiveWordServiceImpl implements SensitiveWordService {
+
     private final SensitiveWordRepository repository;
 
     @Override
-    @CacheEvict(value = "sensitiveWords", allEntries = true)
     public WordResponse create(CreateWordRequest request) {
-
         String normalized = request.getWord().toUpperCase().trim();
 
         if (repository.existsByWord(normalized)) {
@@ -43,7 +39,14 @@ public class SensitiveWordServiceImpl implements SensitiveWordService {
                 .word(normalized)
                 .build();
 
-        return mapToResponseOnSave(repository.save(word), "Word successfully");
+        SensitiveWord savedWord = repository.save(word);
+
+        return WordResponse.builder()
+                .id(savedWord.getId())
+                .word(savedWord.getWord())
+                .message("Word successfully created")
+                .build();
+
     }
 
     @Override
@@ -58,21 +61,18 @@ public class SensitiveWordServiceImpl implements SensitiveWordService {
     public WordResponse getById(Long id) {
         SensitiveWord word = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Word not found"));
+
         return mapToResponse(word);
     }
 
     @Override
- //   @CacheEvict(value = "sensitiveWords", allEntries = true)
     public WordResponse update(Long id, UpdateWordRequest request) {
-
         SensitiveWord existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Word not found"));
 
-        String normalized = request.getWord().toLowerCase().trim();
+        String normalized = request.getWord().toUpperCase().trim();
 
-        if (!existing.getWord().equals(normalized)
-                && repository.existsByWord(normalized)) {
-
+        if (!existing.getWord().equals(normalized) && repository.existsByWord(normalized)) {
             return WordResponse.builder()
                     .id(existing.getId())
                     .word(existing.getWord())
@@ -81,33 +81,25 @@ public class SensitiveWordServiceImpl implements SensitiveWordService {
         }
 
         existing.setWord(normalized);
-
-
-        var updatedWord = repository.save(existing);
-
+        repository.save(existing);
 
         return WordResponse.builder()
-                .id(updatedWord.getId())
-                .word(updatedWord.getWord())
+                .id(existing.getId())
+                .word(existing.getWord())
                 .message("Word successfully updated")
                 .build();
     }
 
     @Override
- //   @CacheEvict(value = "sensitiveWords", allEntries = true)
     public void delete(Long id) {
-
         if (!repository.existsById(id)) {
             throw new ResourceNotFoundException("Word not found");
         }
-
         repository.deleteById(id);
     }
 
     @Override
-   // @Cacheable("sensitiveWords")
     public List<String> getAllWordsForSanitization() {
-
         return repository.findAll()
                 .stream()
                 .map(SensitiveWord::getWord)
@@ -115,21 +107,9 @@ public class SensitiveWordServiceImpl implements SensitiveWordService {
     }
 
     private WordResponse mapToResponse(SensitiveWord word) {
-
         return WordResponse.builder()
                 .id(word.getId())
                 .word(word.getWord())
-       //         .createdAt(word.getCreatedAt())
-      //          .updatedAt(word.getUpdatedAt())
-                .build();
-    }
-
-    private WordResponse mapToResponseOnSave(SensitiveWord word, String message) {
-
-        return WordResponse.builder()
-                .id(word.getId())
-                .word(word.getWord())
-                .message(message)
                 .build();
     }
 

@@ -67,12 +67,7 @@ public class SensitiveWordController {
             @Parameter(description = "ID of the word to update", example = "1")
             @PathVariable Long id,
             @Valid @RequestBody UpdateWordRequest request) {
-
-
-        System.out.println(request);
-
-var dddiii = sensitiveWordService.update(id, request);
-        return ResponseEntity.ok(dddiii);
+        return ResponseEntity.ok(sensitiveWordService.update(id, request));
     }
 
     @Operation(summary = "Delete a sensitive word")

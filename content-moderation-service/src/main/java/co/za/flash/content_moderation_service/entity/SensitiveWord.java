@@ -3,8 +3,6 @@ package co.za.flash.content_moderation_service.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Table(
         name = "sensitive_words",
