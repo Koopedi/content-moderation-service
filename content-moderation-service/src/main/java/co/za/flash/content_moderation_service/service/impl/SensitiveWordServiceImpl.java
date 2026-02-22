@@ -27,10 +27,9 @@ public class SensitiveWordServiceImpl implements SensitiveWordService {
     @CacheEvict(value = "sensitiveWords", allEntries = true)
     public WordResponse create(CreateWordRequest request) {
 
-        String normalized = request.getWord().toLowerCase().trim();
+        String normalized = request.getWord().toUpperCase().trim();
 
         if (repository.existsByWord(normalized)) {
-          //  throw new DuplicateWordException("Word already exists");
 
             return WordResponse.builder()
                     .id(null)
@@ -45,8 +44,6 @@ public class SensitiveWordServiceImpl implements SensitiveWordService {
                 .build();
 
         return mapToResponseOnSave(repository.save(word), "Word successfully");
-
-      //  return mapToResponse(repository.save(word));
     }
 
     @Override
@@ -65,7 +62,7 @@ public class SensitiveWordServiceImpl implements SensitiveWordService {
     }
 
     @Override
-    @CacheEvict(value = "sensitiveWords", allEntries = true)
+ //   @CacheEvict(value = "sensitiveWords", allEntries = true)
     public WordResponse update(Long id, UpdateWordRequest request) {
 
         SensitiveWord existing = repository.findById(id)
@@ -75,17 +72,29 @@ public class SensitiveWordServiceImpl implements SensitiveWordService {
 
         if (!existing.getWord().equals(normalized)
                 && repository.existsByWord(normalized)) {
-          //  throw new DuplicateWordException("Word already exists");
-            return mapToResponseOnSave(existing, "Word already exists");
+
+            return WordResponse.builder()
+                    .id(existing.getId())
+                    .word(existing.getWord())
+                    .message("Word already exists")
+                    .build();
         }
 
         existing.setWord(normalized);
 
-        return mapToResponseOnSave(repository.save(existing), "Word successfully");
+
+        var updatedWord = repository.save(existing);
+
+
+        return WordResponse.builder()
+                .id(updatedWord.getId())
+                .word(updatedWord.getWord())
+                .message("Word successfully updated")
+                .build();
     }
 
     @Override
-    @CacheEvict(value = "sensitiveWords", allEntries = true)
+ //   @CacheEvict(value = "sensitiveWords", allEntries = true)
     public void delete(Long id) {
 
         if (!repository.existsById(id)) {
@@ -121,8 +130,6 @@ public class SensitiveWordServiceImpl implements SensitiveWordService {
                 .id(word.getId())
                 .word(word.getWord())
                 .message(message)
-                //         .createdAt(word.getCreatedAt())
-                //          .updatedAt(word.getUpdatedAt())
                 .build();
     }
 
